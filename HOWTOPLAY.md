@@ -1,0 +1,25 @@
+ ██▀███   █    ██  ███▄    █ ▓█████  ▄▄▄▄    ▒█████   █    ██  ███▄    █ ▓█████▄ 
+▓██ ▒ ██▒ ██  ▓██▒ ██ ▀█   █ ▓█   ▀ ▓█████▄ ▒██▒  ██▒ ██  ▓██▒ ██ ▀█   █ ▒██▀ ██▌
+▓██ ░▄█ ▒▓██  ▒██░▓██  ▀█ ██▒▒███   ▒██▒ ▄██▒██░  ██▒▓██  ▒██░▓██  ▀█ ██▒░██   █▌
+▒██▀▀█▄  ▓▓█  ░██░▓██▒  ▐▌██▒▒▓█  ▄ ▒██░█▀  ▒██   ██░▓▓█  ░██░▓██▒  ▐▌██▒░▓█▄   ▌
+░██▓ ▒██▒▒▒█████▓ ▒██░   ▓██░░▒████▒░▓█  ▀█▓░ ████▓▒░▒▒█████▓ ▒██░   ▓██░░▒████▓ 
+░ ▒▓ ░▒▓░░▒▓▒ ▒ ▒ ░ ▒░   ▒ ▒ ░░ ▒░ ░░▒▓███▀▒░ ▒░▒░▒░ ░▒▓▒ ▒ ▒ ░ ▒░   ▒ ▒  ▒▒▓  ▒ 
+  ░▒ ░ ▒░░░▒░ ░ ░ ░ ░░   ░ ▒░ ░ ░  ░▒░▒   ░   ░ ▒ ▒░ ░░▒░ ░ ░ ░ ░░   ░ ▒░ ░ ▒  ▒ 
+  ░░   ░  ░░░ ░ ░    ░   ░ ░    ░    ░    ░ ░ ░ ░ ▒   ░░░ ░ ░    ░   ░ ░  ░ ░  ░ 
+   ░        ░              ░    ░  ░ ░          ░ ░     ░              ░    ░    
+                                            ░                               ░      
+Made by c0pernicium
+-------------------
+How to play:
+
+1. Go to the RuneBound repository on Github
+
+2. Click on the file named 'RB Launcher'
+
+3. Copy the code provided in the file
+
+4. Go to a Python Compiler website like https://www.programiz.com/python-programming/online-compiler/
+
+5. On the left side of the screen, paste the code
+
+6. Click the 'Run' button and enjoy!
