@@ -60,6 +60,8 @@ while True:
     command = input("> ").strip().lower()
     if command == "help":
         print(f"\n{separator}")
+        print("HELP MENU")
+        print(f"{separator}")
         print("stats - Shows your current status")
         print("save - Save your current progress")
         print(f"{separator}\n")
