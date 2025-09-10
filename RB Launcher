@@ -65,6 +65,8 @@ while True:
         print(f"{separator}\n")
     elif command == "stats":
         print(f"\n{separator}")
+        print("PLAYER STATS")
+        print(f"{separator}")
         print(f"Name: {player_name}")
         print(f"RuneBits: {rune_bits}")
         print(f"HP: {hp}")
@@ -79,4 +81,4 @@ while True:
         print("\nGame saved! Here is your save code:")
         print(save_code)
     else:
-        print(f"Error: '{command}' is not a recognized command.")
+        print(f"'{command}' is not a recognized action.")
