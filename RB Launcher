@@ -1,0 +1,45 @@
+# Made by c0pernicium
+import time
+import json
+import base64
+
+def encode_save(data: dict) -> str:
+    """Turn save data into a base64 string."""
+    json_data = json.dumps(data)
+    return base64.b64encode(json_data.encode()).decode()
+
+def decode_save(code: str) -> dict:
+    """Turn a base64 string back into save data."""
+    try:
+        json_data = base64.b64decode(code.encode()).decode()
+        return json.loads(json_data)
+    except Exception:
+        return None
+
+print("Welcome to RuneBound!")
+time.sleep(1)
+
+print("Is this your first time playing? (yes/no)")
+first_time = input("> ").strip().lower()
+
+if first_time.startswith("y"):
+    print("Please enter your name:")
+    player_name = input("> ").strip()
+    save_data = {"player_name": player_name}
+    # save_code = encode_save(save_data)   # (not shown to player)
+    print(f"Welcome, {player_name}!")
+
+else:
+    print("Please enter your save code:")
+    save_code = input("> ").strip()
+    data = decode_save(save_code)
+    if data:
+        player_name = data["player_name"]
+        print(f"Welcome back, {player_name}!")
+    else:
+        print("Invalid save code. Starting a new game.")
+        print("Please enter your name:")
+        player_name = input("> ").strip()
+        save_data = {"player_name": player_name}
+        # save_code = encode_save(save_data)   # (not shown to player)
+        print(f"Welcome, {player_name}!")
