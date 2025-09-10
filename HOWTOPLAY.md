@@ -9,7 +9,7 @@
    ░        ░              ░    ░  ░ ░          ░ ░     ░              ░    ░    
                                             ░                               ░      
 Made by c0pernicium
--------------------
+- - - - - - - - - -
 How to play:
 
 1. Go to the RuneBound repository on Github
