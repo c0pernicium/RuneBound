@@ -1,162 +1,265 @@
-# Made by c0pernicium
-import time
+import tkinter as tk
+from tkinter import scrolledtext
 import json
 import base64
+import sys
 
+# ----------------- SAVE SYSTEM -----------------
 def encode_save(data: dict) -> str:
-    json_data = json.dumps(data)
-    return base64.b64encode(json_data.encode()).decode()
+    return base64.b64encode(json.dumps(data).encode()).decode()
 
 def decode_save(code: str) -> dict:
     try:
-        json_data = base64.b64decode(code.encode()).decode()
-        return json.loads(json_data)
+        return json.loads(base64.b64decode(code.encode()).decode())
     except Exception:
         return None
 
-def new_game():
-    print("Please enter your name:")
-    player_name = input("> ").strip()
-    rune_bits = 0
-    hp = 100
-    max_hp = 100
-    level = 1
-    xp = 0
-    bag_slots = 3
-    bag = [{"item": None, "quantity": 0} for _ in range(bag_slots)]
-    save_data = {
-        "player_name": player_name,
-        "rune_bits": rune_bits,
-        "hp": hp,
-        "max_hp": max_hp,
-        "level": level,
-        "xp": xp,
-        "bag": bag
-    }
-    print(f"Welcome, {player_name}!")
-    return player_name, rune_bits, hp, max_hp, level, xp, bag, save_data
-
+# ----------------- RUNEBOUND GAME -----------------
 ITEMS = {
     "bread": {"name": "Bread", "heal": 25},
-    "item": {"name": "Item"}  
+    "item": {"name": "Item"}
 }
 
-print("Welcome to RuneBound!")
-time.sleep(1)
+class RuneBoundGame:
+    def __init__(self, gui):
+        self.gui = gui
+        self.player_name = ""
+        self.rune_bits = 0
+        self.hp = 100
+        self.max_hp = 100
+        self.level = 1
+        self.xp = 0
+        self.bag_slots = 3
+        self.bag = [{"item": None, "quantity": 0} for _ in range(self.bag_slots)]
+        self.save_data = {}
+        self.separator = "-" * 50
+        self.active = True
+        self.gui.current_game_instance = self
+        self.start_game()
 
-while True:
-    print("Is this your first time playing? (yes/no)")
-    first_time = input("> ").strip().lower()
-    if first_time in ["yes", "y"]:
-        player_name, rune_bits, hp, max_hp, level, xp, bag, save_data = new_game()
-        break
-    elif first_time in ["no", "n"]:
-        print("Please enter your save code:")
-        save_code = input("> ").strip()
-        data = decode_save(save_code)
-        if data and "player_name" in data:
-            player_name = data["player_name"]
-            rune_bits = data.get("rune_bits", 0)
-            hp = data.get("hp", 100)
-            max_hp = data.get("max_hp", 100)
-            level = data.get("level", 1)
-            xp = data.get("xp", 0)
-            bag = data.get("bag", [{"item": None, "quantity": 0} for _ in range(3)])
-            save_data = data
-            print(f"Welcome back, {player_name}!")
-            break
+    def print(self, text):
+        self.gui.print_output(text)
+
+    def start_game(self):
+        self.print("Welcome to RuneBound!")
+        self.print("Is this your first time playing? (yes/no)")
+        self.gui.await_input(self.handle_first_time)
+
+    def handle_first_time(self, answer):
+        first_time = answer.strip().lower()
+        if first_time in ["yes", "y"]:
+            self.new_game()
+        elif first_time in ["no", "n"]:
+            self.print("Please enter your save code:")
+            self.gui.await_input(self.load_save)
         else:
-            print("Invalid save code. Starting a new game.")
-            player_name, rune_bits, hp, max_hp, level, xp, bag, save_data = new_game()
-            break
-    else:
-        print("Please answer 'yes' or 'no'.")
+            self.print("Please answer 'yes' or 'no'.")
+            self.gui.await_input(self.handle_first_time)
 
-separator = "-" * 50
+    def new_game(self, _=None):
+        self.print("Please enter your name:")
+        self.gui.await_input(self.set_name)
 
-def add_xp(amount):
-    global xp, level
-    xp += amount
-    while xp >= 100:
-        xp -= 100
-        level += 1
-        print(f"\nCongratulations! You leveled up to Level {level}!\n")
+    def set_name(self, name):
+        self.player_name = name.strip()
+        self.print(f"Welcome, {self.player_name}!")
+        self.update_save()
+        self.await_command()
 
-def use_item(item_name):
-    if item_name not in ITEMS:
-        print(f"No item named {item_name}.")
-        return
+    def load_save(self, code):
+        data = decode_save(code.strip())
+        if data and "player_name" in data:
+            self.player_name = data["player_name"]
+            self.rune_bits = data.get("rune_bits", 0)
+            self.hp = data.get("hp", 100)
+            self.max_hp = data.get("max_hp", 100)
+            self.level = data.get("level", 1)
+            self.xp = data.get("xp", 0)
+            self.bag = data.get("bag", [{"item": None, "quantity": 0} for _ in range(3)])
+            self.save_data = data
+            self.print(f"Welcome back, {self.player_name}!")
+            self.await_command()
+        else:
+            self.print("Invalid save code. Starting a new game.")
+            self.new_game()
 
-    for slot in bag:
-        if slot["item"] == item_name:
-            if slot["quantity"] > 0:
+    def add_xp(self, amount):
+        self.xp += amount
+        while self.xp >= 100:
+            self.xp -= 100
+            self.level += 1
+            self.print(f"\nCongratulations! You leveled up to Level {self.level}!\n")
+
+    def use_item(self, item_name):
+        if item_name not in ITEMS:
+            self.print(f"No item named {item_name}.")
+            return
+        for slot in self.bag:
+            if slot["item"] == item_name and slot["quantity"] > 0:
                 item_data = ITEMS[item_name]
-                global hp
                 if "heal" in item_data:
                     heal_amount = item_data["heal"]
-                    if hp + heal_amount > max_hp:
-                        overflow = hp + heal_amount - max_hp
-                        hp = max_hp
-                        add_xp(overflow)
+                    if self.hp + heal_amount > self.max_hp:
+                        overflow = self.hp + heal_amount - self.max_hp
+                        self.hp = self.max_hp
+                        self.add_xp(overflow)
                     else:
-                        hp += heal_amount
-                    print(f"You used {item_data['name']} and restored HP. Current HP: {hp}")
+                        self.hp += heal_amount
+                    self.print(f"You used {item_data['name']} and restored HP. Current HP: {self.hp}")
                 else:
-                    print(f"You used {item_data['name']}.")
+                    self.print(f"You used {item_data['name']}.")
                 slot["quantity"] -= 1
                 if slot["quantity"] == 0:
                     slot["item"] = None
                 return
-            else:
-                print(f'You don’t have any {item_name}.')
-                return
+        self.print(f"You don’t have any {item_name}.")
 
-    print(f'You don’t have any {item_name}.')
-
-while True:
-    command = input("> ").strip().lower()
-    if command == "help":
-        print(f"\n{separator}")
-        print("HELP MENU")
-        print(f"{separator}")
-        print("stats - Shows your current status")
-        print("save - Saves your progress")
-        print("bag - Shows what is in your bag")
-        print("use - Uses an item from your bag")
-        print(f"{separator}\n")
-    elif command == "stats":
-        print(f"\n{separator}")
-        print("PLAYER STATS")
-        print(f"{separator}")
-        print(f"Name: {player_name}")
-        print(f"RuneBits: {rune_bits}")
-        print(f"HP: {hp}/{max_hp}")
-        print(f"Level: {level}")
-        print(f"XP: {xp}/100")
-        print(f"{separator}\n")
-    elif command == "bag":
-        print(f"\n{separator}")
-        print("BAG CONTENTS")
-        print(f"{separator}")
-        for i, slot in enumerate(bag, 1):
-            item_name = slot["item"] if slot["item"] else "Empty"
-            print(f" Slot {i}: {item_name} x{slot['quantity']}")
-        print(f"{separator}\n")
-    elif command.startswith("use "):
-        item_name = command.split(" ", 1)[1]
-        use_item(item_name)
-    elif command == "save":
-        save_data = {
-            "player_name": player_name,
-            "rune_bits": rune_bits,
-            "hp": hp,
-            "max_hp": max_hp,
-            "level": level,
-            "xp": xp,
-            "bag": bag
+    def update_save(self):
+        self.save_data = {
+            "player_name": self.player_name,
+            "rune_bits": self.rune_bits,
+            "hp": self.hp,
+            "max_hp": self.max_hp,
+            "level": self.level,
+            "xp": self.xp,
+            "bag": self.bag
         }
-        save_code = encode_save(save_data)
-        print("\nGame saved! Here is your save code:")
-        print(save_code)
-    else:
-        print(f"'{command}' is not a recognized action.")
+
+    def await_command(self, _=None):
+        if self.active:
+            self.gui.await_input(self.process_command)
+
+    def process_command(self, command):
+        cmd = command.strip().lower()
+        if cmd == "help":
+            self.print(f"\n{self.separator}")
+            self.print("HELP MENU")
+            self.print(f"{self.separator}")
+            self.print("stats - Shows your current status")
+            self.print("save - Saves your progress")
+            self.print("bag - Shows what is in your bag")
+            self.print("use - Uses an item from your bag")
+            self.print("clear - Clears the screen")
+            self.print("/terminal - Exit to RuneBound terminal menu")
+            self.print(f"{self.separator}\n")
+        elif cmd == "stats":
+            self.print(f"\n{self.separator}")
+            self.print("PLAYER STATS")
+            self.print(f"{self.separator}")
+            self.print(f"Name: {self.player_name}")
+            self.print(f"RuneBits: {self.rune_bits}")
+            self.print(f"HP: {self.hp}/{self.max_hp}")
+            self.print(f"Level: {self.level}")
+            self.print(f"XP: {self.xp}/100")
+            self.print(f"{self.separator}\n")
+        elif cmd == "bag":
+            self.print(f"\n{self.separator}")
+            self.print("BAG CONTENTS")
+            self.print(f"{self.separator}")
+            for i, slot in enumerate(self.bag, 1):
+                item_name = slot["item"] if slot["item"] else "Empty"
+                self.print(f" Slot {i}: {item_name} x{slot['quantity']}")
+            self.print(f"{self.separator}\n")
+        elif cmd.startswith("use "):
+            item_name = cmd.split(" ", 1)[1]
+            self.use_item(item_name)
+        elif cmd == "save":
+            self.update_save()
+            code = encode_save(self.save_data)
+            self.print("\nGame saved! Here is your save code:")
+            self.print(code)
+        elif cmd == "clear":
+            self.gui.clear_screen()
+        elif cmd == "/terminal":
+            # Pause the game, go to terminal
+            self.active = False
+            self.gui.show_runebound_menu()
+        else:
+            self.print(f"'{cmd}' is not a recognized action.")
+        if self.active:
+            self.await_command()
+
+# ----------------- GUI -----------------
+class RuneBoundWindow:
+    def __init__(self, root):
+        self.root = root
+        root.title("RuneBound")
+        root.geometry("700x450")
+
+        self.output = scrolledtext.ScrolledText(root, state='disabled', wrap='word')
+        self.output.pack(expand=True, fill='both')
+
+        self.input_box = tk.Entry(root)
+        self.input_box.pack(fill='x')
+        self.input_box.bind('<Return>', self.handle_input)
+
+        self.awaiting_callback = None
+        self.current_game_instance = None
+
+        self.show_runebound_menu()
+        self.input_box.focus_set()
+
+    def print_output(self, text):
+        self.output.configure(state='normal')
+        self.output.insert("end", text + "\n")
+        self.output.configure(state='disabled')
+        self.output.see("end")
+
+    def clear_screen(self):
+        self.output.configure(state='normal')
+        self.output.delete(1.0, "end")
+        self.output.configure(state='disabled')
+
+    def await_input(self, callback):
+        self.awaiting_callback = callback
+
+    def show_runebound_menu(self):
+        self.clear_screen()
+        self.print_output("RuneBound Terminal")
+        self.print_output("Type '/help' for assistance.")
+        self.await_input(self.process_menu_command)
+
+    def process_menu_command(self, text):
+        cmd = text.strip().lower()
+        if cmd == "/run":
+            RuneBoundGame(self)
+        elif cmd == "/resume":
+            if self.current_game_instance and self.current_game_instance.active:
+                self.print_output("Resuming RuneBound...")
+                # Set game callback to current instance
+                self.current_game_instance.await_command()
+            elif self.current_game_instance and not self.current_game_instance.active:
+                self.print_output("Resuming RuneBound (paused game)...")
+                self.current_game_instance.active = True
+                self.current_game_instance.await_command()
+            else:
+                self.print_output("No active RuneBound game to resume.")
+        elif cmd == "/end":
+            self.print_output("Ending session...")
+            self.root.destroy()
+            sys.exit()
+        elif cmd == "/help":
+            self.print_output("RuneBound terminal commands:")
+            self.print_output("  /run - Start RuneBound")
+            self.print_output("  /resume - Resume running RuneBound")
+            self.print_output("  /end - Exit session")
+        else:
+            self.print_output(f"Unknown command: {cmd}")
+
+    def handle_input(self, event):
+        text = self.input_box.get().strip()
+        self.input_box.delete(0, "end")
+        if self.awaiting_callback:
+            cb = self.awaiting_callback
+            self.awaiting_callback = None
+            cb(text)
+        elif text.startswith("/"):
+            self.process_menu_command(text)
+        else:
+            self.print_output("Commands must start with '/'")
+
+# ----------------- MAIN -----------------
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = RuneBoundWindow(root)
+    root.mainloop()
